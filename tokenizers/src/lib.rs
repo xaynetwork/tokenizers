@@ -43,7 +43,7 @@
 //! ```
 //!
 //! ## Training and serialization example
-//!  
+//!
 //! ```no_run
 //! use tokenizers::decoders::DecoderWrapper;
 //! use tokenizers::models::bpe::{BpeTrainerBuilder, BPE};
@@ -71,7 +71,7 @@
 //!         ])
 //!         .build();
 //!
-//!     let tokenizer = TokenizerBuilder::new()
+//!     let mut tokenizer = TokenizerBuilder::new()
 //!         .with_model(BPE::default())
 //!         .with_normalizer(Some(Sequence::new(vec![
 //!             NormalizerWrapper::StripNormalizer(Strip::new(true, true)),
@@ -82,13 +82,11 @@
 //!         .with_decoder(Some(DecoderWrapper::ByteLevel(ByteLevel::default())))
 //!         .build()?;
 //!
-//!     tokenizer
-//!         .train(
-//!             &trainer,
-//!             vec!["path/to/vocab.txt".to_string()],
-//!         )?
-//!         .get_model()
-//!         .save(Path::new("result-folder"), Some("some-prefix"))?;
+//!     tokenizer.train(
+//!         &trainer,
+//!         vec!["path/to/vocab.txt".to_string()],
+//!     )?;
+//!     tokenizer.get_model().save(Path::new("result-folder"), Some("some-prefix"))?;
 //!
 //!     Ok(())
 //! }

@@ -417,7 +417,7 @@ impl UnigramTrainer {
             .collect();
         new_pieces
     }
-    pub fn _train(&self, sentences: Vec<Sentence>) -> Result<(Unigram, Vec<AddedToken>)> {
+    pub fn _train(&self, sentences: Vec<Sentence>, model: &mut Unigram) -> Result<Vec<AddedToken>> {
         let progress = self.setup_progress();
         //
         // 1. Compute frequent substrings
@@ -450,7 +450,7 @@ impl UnigramTrainer {
         let expected_updates = expected_loops as usize * self.n_sub_iterations as usize;
         self.update_progress(&progress, expected_updates, "EM training");
         let required_chars = self.required_chars(&sentences);
-        let mut model = Unigram::from(pieces.clone(), 0)?;
+        let mut new_model = Unigram::from(pieces.clone(), 0)?;
         loop {
             // Sub-EM iteration.
             for _iter in 0..self.n_sub_iterations {
@@ -459,7 +459,7 @@ impl UnigramTrainer {
 
                 // Executes M step.
                 pieces = self.run_m_step(&pieces, &expected);
-                model = Unigram::from(pieces.clone(), 0)?;
+                new_model = Unigram::from(pieces.clone(), 0)?;
 
                 // Useful comment for checking compatibility with spm
                 debug!(
@@ -483,14 +483,14 @@ impl UnigramTrainer {
 
             // Prunes pieces.
             pieces = self.prune_sentence_pieces(&model, &pieces, &sentences);
-            model = Unigram::from(pieces.clone(), 0)?;
+            new_model = Unigram::from(pieces.clone(), 0)?;
         }
         self.finalize_progress(&progress, expected_updates);
 
         // Finally, adjusts the size of sentencepices to be |vocab_size|.
-        model = self.finalize(model, required_chars)?;
+        *model = self.finalize(new_model, required_chars)?;
 
-        Ok((model, self.special_tokens.clone()))
+        Ok(self.special_tokens.clone())
     }
 }
 
@@ -498,9 +498,13 @@ impl Trainer for UnigramTrainer {
     type Model = Unigram;
 
     /// Train a Unigram model
-    fn train(&self, word_counts: HashMap<String, u32>) -> Result<(Self::Model, Vec<AddedToken>)> {
+    fn train(
+        &self,
+        word_counts: HashMap<String, u32>,
+        model: &mut Unigram,
+    ) -> Result<Vec<AddedToken>> {
         let sentences: Vec<_> = word_counts.into_iter().collect();
-        self._train(sentences)
+        self._train(sentences, model)
     }
 
     /// Whether we should show progress
