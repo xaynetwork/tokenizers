@@ -26,11 +26,6 @@ use serde::de::DeserializeOwned;
 use serde::export::Formatter;
 use serde::{Deserialize, Serialize};
 
-use crate::decoders::DecoderWrapper;
-use crate::models::ModelWrapper;
-use crate::normalizers::NormalizerWrapper;
-use crate::pre_tokenizers::PreTokenizerWrapper;
-use crate::processors::PostProcessorWrapper;
 use crate::utils::parallelism::*;
 
 mod added_vocabulary;
@@ -40,6 +35,13 @@ pub mod pattern;
 pub mod pre_tokenizer;
 mod serialization;
 
+// Re-export wrappers
+pub use crate::decoders::DecoderWrapper;
+pub use crate::models::ModelWrapper;
+pub use crate::normalizers::NormalizerWrapper;
+pub use crate::pre_tokenizers::PreTokenizerWrapper;
+pub use crate::processors::PostProcessorWrapper;
+// And some other types
 pub use crate::utils::iter::LinesWithEnding;
 pub use crate::utils::padding::{pad_encodings, PaddingDirection, PaddingParams, PaddingStrategy};
 pub use crate::utils::truncation::{truncate_encodings, TruncationParams, TruncationStrategy};
@@ -390,6 +392,14 @@ impl Tokenizer {
     pub fn from_file<P: AsRef<Path>>(file: P) -> Result<Self> {
         let content = read_to_string(file)?;
         Ok(serde_json::from_str(&content)?)
+    }
+}
+
+impl std::str::FromStr for Tokenizer {
+    type Err = Box<dyn std::error::Error + Send + Sync>;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Ok(serde_json::from_str(s)?)
     }
 }
 
