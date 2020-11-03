@@ -71,7 +71,7 @@ use std::path::Path;
 fn main() -> Result<()> {
     let vocab_size: usize = 100;
 
-    let trainer = BpeTrainerBuilder::new()
+    let trainer = BpeTrainerBuilder::new() // requires "trainer" feature
         .show_progress(true) // requires "progressbar" feature
         .vocab_size(vocab_size)
         .min_frequency(0)
@@ -117,5 +117,6 @@ environment variable. As an example setting `RAYON_RS_NUM_CPUS=4` will allocate 
 ## Features
 
 - **progressbar**: The progress bar visualization is enabled by default. It might be disabled if
-  compilation for certain targets is not supported by the [termios](https://crates.io/crates/termios)
-  dependency of the [indicatif](https://crates.io/crates/indicatif) progress bar.
+compilation for certain targets is not supported or to save some binary space.
+- **trainer**: The word model trainers are enabled by default. They might be disabled if
+compilation for certain targets is not supported or to save some binary space.

@@ -9,17 +9,18 @@
 //!   - [`PostProcessor`](trait.PostProcessor.html): Takes care of the processing after tokenization (like truncating, padding,
 //!   ...).
 
+#[cfg(feature = "trainer")]
+use std::io::BufReader;
 use std::{
     collections::HashMap,
     fmt,
     fs::{read_to_string, File},
     io::prelude::*,
-    io::BufReader,
     ops::{Deref, DerefMut},
     path::{Path, PathBuf},
 };
 
-#[cfg(feature = "progressbar")]
+#[cfg(all(feature = "progressbar", feature = "trainer"))]
 use indicatif::{ProgressBar, ProgressStyle};
 use serde::de::DeserializeOwned;
 use serde::export::Formatter;
@@ -117,6 +118,7 @@ pub trait Decoder {
     fn decode(&self, tokens: Vec<String>) -> Result<String>;
 }
 
+#[cfg(feature = "trainer")]
 /// A `Trainer` has the responsibility to train a model. We feed it with lines/sentences
 /// and it returns a `Model` when done.
 pub trait Trainer {
@@ -773,6 +775,7 @@ where
     }
 }
 
+#[cfg(feature = "trainer")]
 impl<M, N, PT, PP, D> TokenizerImpl<M, N, PT, PP, D>
 where
     N: Normalizer,
@@ -949,6 +952,7 @@ where
             .collect()
     }
 
+    #[cfg(feature = "trainer")]
     /// Train a model and replace our current Model, using the given Trainer
     fn word_count<MN, T>(&self, trainer: &T, files: Vec<String>) -> Result<HashMap<String, u32>>
     where
@@ -1047,6 +1051,7 @@ where
         Ok(words)
     }
 
+    #[cfg(feature = "trainer")]
     /// Train a model and return a new Tokenizer, using the given Trainer
     pub fn train<T, TM>(
         self,
@@ -1076,6 +1081,7 @@ where
         Ok(new_tok)
     }
 
+    #[cfg(feature = "trainer")]
     /// Train a model and replace our current Model, using the given Trainer
     pub fn train_and_replace<T>(&mut self, trainer: &T, files: Vec<String>) -> Result<()>
     where

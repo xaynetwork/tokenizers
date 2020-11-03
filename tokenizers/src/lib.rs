@@ -45,6 +45,7 @@
 //! ## Training and serialization example
 //!  
 //! ```no_run
+//! # #![cfg(all(feature = "progressbar", feature = "trainer"))]
 //! use tokenizers::decoders::DecoderWrapper;
 //! use tokenizers::models::bpe::{BpeTrainerBuilder, BPE};
 //! use tokenizers::normalizers::{strip::Strip, unicode::NFC, utils::Sequence, NormalizerWrapper};
@@ -56,11 +57,9 @@
 //! use std::path::Path;
 //!
 //! fn main() -> Result<()> {
-//!     # #[cfg(feature = "progressbar")]
-//!     # {
 //!     let vocab_size: usize = 100;
 //!
-//!     let trainer = BpeTrainerBuilder::new()
+//!     let trainer = BpeTrainerBuilder::new() // requires "trainer" feature
 //!         .show_progress(true) // requires "progressbar" feature
 //!         .vocab_size(vocab_size)
 //!         .min_frequency(0)
@@ -91,10 +90,11 @@
 //!         )?
 //!         .get_model()
 //!         .save(Path::new("result-folder"), Some("some-prefix"))?;
-//!    # }
 //!
 //!     Ok(())
 //! }
+//! # #[cfg(not(all(feature = "progressbar", feature = "trainer")))]
+//! # fn main() {}
 //! ```
 //!
 //! # Additional information
@@ -107,8 +107,9 @@
 //! # Features
 //!
 //! - **progressbar**: The progress bar visualization is enabled by default. It might be disabled if
-//! compilation for certain targets is not supported by the [termios](https://crates.io/crates/termios)
-//! dependency of the [indicatif](https://crates.io/crates/indicatif) progress bar.
+//! compilation for certain targets is not supported or to save some binary space.
+//! - **trainer**: The word model trainers are enabled by default. They might be disabled if
+//! compilation for certain targets is not supported or to save some binary space.
 
 #[macro_use]
 extern crate log;

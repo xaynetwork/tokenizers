@@ -3,20 +3,27 @@ extern crate criterion;
 
 mod common;
 
-use std::fs::File;
-use std::io::{BufRead, BufReader};
-use std::path::Path;
+use std::{
+    fs::File,
+    io::{BufRead, BufReader},
+    ops::Deref,
+    path::Path,
+};
 
+#[cfg(feature = "trainer")]
+use common::iter_bench_train;
+use common::{iter_bench_encode, iter_bench_encode_batch};
 use criterion::Criterion;
-use tokenizers::models::bpe::{BpeTrainerBuilder, BPE};
-use tokenizers::models::TrainerWrapper;
-use tokenizers::pre_tokenizers::byte_level::ByteLevel;
-use tokenizers::pre_tokenizers::whitespace::Whitespace;
-use tokenizers::tokenizer::{AddedToken, EncodeInput};
-use tokenizers::Tokenizer;
-
-use common::{iter_bench_encode, iter_bench_encode_batch, iter_bench_train};
-use std::ops::Deref;
+#[cfg(feature = "trainer")]
+use tokenizers::{
+    models::bpe::BpeTrainerBuilder, models::TrainerWrapper, pre_tokenizers::whitespace::Whitespace,
+};
+use tokenizers::{
+    models::bpe::BPE,
+    pre_tokenizers::byte_level::ByteLevel,
+    tokenizer::{AddedToken, EncodeInput},
+    Tokenizer,
+};
 
 static BATCH_SIZE: usize = 1_000;
 
@@ -68,6 +75,7 @@ fn bench_gpt2(c: &mut Criterion) {
     });
 }
 
+#[cfg(feature = "trainer")]
 fn bench_train(c: &mut Criterion) {
     #[cfg(feature = "progressbar")]
     let trainer: TrainerWrapper = BpeTrainerBuilder::default()
@@ -108,9 +116,13 @@ criterion_group! {
     config = Criterion::default().sample_size(20);
     targets = bench_gpt2
 }
+#[cfg(feature = "trainer")]
 criterion_group! {
     name = benches_train;
     config = Criterion::default().sample_size(10);
     targets = bench_train
 }
+#[cfg(not(feature = "trainer"))]
+criterion_main!(benches);
+#[cfg(feature = "trainer")]
 criterion_main!(benches, benches_train);

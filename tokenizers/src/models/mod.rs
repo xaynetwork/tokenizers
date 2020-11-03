@@ -10,11 +10,19 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize, Serializer};
 
-use crate::models::bpe::{BpeTrainer, BPE};
-use crate::models::unigram::{Unigram, UnigramTrainer};
+#[cfg(feature = "trainer")]
+use crate::models::bpe::BpeTrainer;
+use crate::models::bpe::BPE;
+use crate::models::unigram::Unigram;
+#[cfg(feature = "trainer")]
+use crate::models::unigram::UnigramTrainer;
 use crate::models::wordlevel::WordLevel;
-use crate::models::wordpiece::{WordPiece, WordPieceTrainer};
-use crate::{AddedToken, Model, Result, Token, Trainer};
+use crate::models::wordpiece::WordPiece;
+#[cfg(feature = "trainer")]
+use crate::models::wordpiece::WordPieceTrainer;
+#[cfg(feature = "trainer")]
+use crate::{AddedToken, Trainer};
+use crate::{Model, Result, Token};
 
 /// Wraps a vocab mapping (ID -> token) to a struct that will be serialized in order
 /// of token ID, smallest to largest.
@@ -114,12 +122,14 @@ impl Model for ModelWrapper {
     }
 }
 
+#[cfg(feature = "trainer")]
 pub enum TrainerWrapper {
     BpeTrainer(BpeTrainer),
     WordPieceTrainer(WordPieceTrainer),
     UnigramTrainer(UnigramTrainer),
 }
 
+#[cfg(feature = "trainer")]
 impl Trainer for TrainerWrapper {
     type Model = ModelWrapper;
 
@@ -149,6 +159,9 @@ impl Trainer for TrainerWrapper {
     }
 }
 
+#[cfg(feature = "trainer")]
 impl_enum_from!(BpeTrainer, TrainerWrapper, BpeTrainer);
+#[cfg(feature = "trainer")]
 impl_enum_from!(WordPieceTrainer, TrainerWrapper, WordPieceTrainer);
+#[cfg(feature = "trainer")]
 impl_enum_from!(UnigramTrainer, TrainerWrapper, UnigramTrainer);

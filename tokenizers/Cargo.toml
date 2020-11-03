@@ -50,7 +50,7 @@ unicode-segmentation = "1.6"
 indicatif = { version = "0.15", optional = true }
 itertools = "0.9"
 log = "0.4"
-esaxx-rs = "0.1"
+esaxx-rs = { version = "0.1", optional = true }
 derive_builder = "0.9"
 spm_precompiled = "0.1"
 
@@ -60,5 +60,6 @@ tempfile = "3.1"
 assert_approx_eq = "1.1"
 
 [features]
-default = ["progressbar"]
+default = ["progressbar", "trainer"]
 progressbar = ["indicatif"]
+trainer = ["esaxx-rs"]

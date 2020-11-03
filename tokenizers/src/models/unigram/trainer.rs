@@ -634,8 +634,14 @@ mod tests {
 
     #[test]
     fn test_initial_alphabet() {
+        #[cfg(feature = "progressbar")]
         let trainer = UnigramTrainerBuilder::default()
             .show_progress(false)
+            .initial_alphabet(HashSet::from_iter(vec!['a', 'b', 'c', 'd', 'e', 'f']))
+            .build()
+            .unwrap();
+        #[cfg(not(feature = "progressbar"))]
+        let trainer = UnigramTrainerBuilder::default()
             .initial_alphabet(HashSet::from_iter(vec!['a', 'b', 'c', 'd', 'e', 'f']))
             .build()
             .unwrap();
@@ -655,8 +661,18 @@ mod tests {
     #[test]
     fn test_unk_token() {
         // 1. Should add `unk_token` as first special token
+        #[cfg(feature = "progressbar")]
         let trainer = UnigramTrainerBuilder::default()
             .show_progress(false)
+            .special_tokens(vec![
+                AddedToken::from("[SEP]", true),
+                AddedToken::from("[CLS]", true),
+            ])
+            .unk_token(Some("[UNK]".into()))
+            .build()
+            .unwrap();
+        #[cfg(not(feature = "progressbar"))]
+        let trainer = UnigramTrainerBuilder::default()
             .special_tokens(vec![
                 AddedToken::from("[SEP]", true),
                 AddedToken::from("[CLS]", true),
@@ -678,8 +694,19 @@ mod tests {
         assert_eq!(pieces.next(), Some(&("[CLS]".into(), 0.0)));
 
         // 2. Let it where it is
+        #[cfg(feature = "progressbar")]
         let trainer = UnigramTrainerBuilder::default()
             .show_progress(false)
+            .special_tokens(vec![
+                AddedToken::from("[SEP]", true),
+                AddedToken::from("[CLS]", true),
+                AddedToken::from("[UNK]", true),
+            ])
+            .unk_token(Some("[UNK]".into()))
+            .build()
+            .unwrap();
+        #[cfg(not(feature = "progressbar"))]
+        let trainer = UnigramTrainerBuilder::default()
             .special_tokens(vec![
                 AddedToken::from("[SEP]", true),
                 AddedToken::from("[CLS]", true),
@@ -702,10 +729,13 @@ mod tests {
         assert_eq!(pieces.next(), Some(&("[UNK]".into(), 0.0)));
 
         // 3. Don't put it there if not needed
+        #[cfg(feature = "progressbar")]
         let trainer = UnigramTrainerBuilder::default()
             .show_progress(false)
             .build()
             .unwrap();
+        #[cfg(not(feature = "progressbar"))]
+        let trainer = UnigramTrainerBuilder::default().build().unwrap();
 
         let (unigram, _) = trainer
             .train(HashMap::from_iter(vec![
@@ -720,8 +750,17 @@ mod tests {
 
     #[test]
     fn test_special_tokens() {
+        #[cfg(feature = "progressbar")]
         let trainer = UnigramTrainerBuilder::default()
             .show_progress(false)
+            .special_tokens(vec![
+                AddedToken::from("[SEP]", true),
+                AddedToken::from("[CLS]", true),
+            ])
+            .build()
+            .unwrap();
+        #[cfg(not(feature = "progressbar"))]
+        let trainer = UnigramTrainerBuilder::default()
             .special_tokens(vec![
                 AddedToken::from("[SEP]", true),
                 AddedToken::from("[CLS]", true),

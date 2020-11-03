@@ -2,8 +2,10 @@ use std::time::{Duration, Instant};
 
 use criterion::black_box;
 
+#[cfg(feature = "trainer")]
+use tokenizers::Trainer;
 use tokenizers::{
-    Decoder, EncodeInput, Model, Normalizer, PostProcessor, PreTokenizer, TokenizerImpl, Trainer,
+    Decoder, EncodeInput, Model, Normalizer, PostProcessor, PreTokenizer, TokenizerImpl,
 };
 
 pub fn iter_bench_encode<M, N, PT, PP, D>(
@@ -58,6 +60,7 @@ where
     duration
 }
 
+#[cfg(feature = "trainer")]
 pub fn iter_bench_train<T, M, N, PT, PP, D>(
     iters: u64,
     tokenizer: &mut TokenizerImpl<M, N, PT, PP, D>,
