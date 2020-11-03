@@ -14,7 +14,9 @@ use std::{
 };
 
 mod serialization;
+#[cfg(feature = "trainer")]
 mod trainer;
+#[cfg(feature = "trainer")]
 pub use trainer::*;
 
 #[derive(Debug)]

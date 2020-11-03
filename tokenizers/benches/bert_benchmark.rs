@@ -7,17 +7,21 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
+#[cfg(feature = "trainer")]
+use common::iter_bench_train;
+use common::{iter_bench_encode, iter_bench_encode_batch};
 use criterion::Criterion;
-use tokenizers::models::wordpiece::{WordPiece, WordPieceTrainerBuilder};
-use tokenizers::normalizers::{BertNormalizer, NormalizerWrapper};
-use tokenizers::pre_tokenizers::bert::BertPreTokenizer;
-use tokenizers::processors::bert::BertProcessing;
-use tokenizers::{decoders, EncodeInput, Model, TokenizerImpl};
-
-use common::{iter_bench_encode, iter_bench_encode_batch, iter_bench_train};
-use tokenizers::decoders::DecoderWrapper;
-use tokenizers::pre_tokenizers::whitespace::Whitespace;
-use tokenizers::processors::PostProcessorWrapper;
+use tokenizers::{
+    decoders, models::wordpiece::WordPiece, normalizers::BertNormalizer,
+    pre_tokenizers::bert::BertPreTokenizer, processors::bert::BertProcessing, EncodeInput, Model,
+    TokenizerImpl,
+};
+#[cfg(feature = "trainer")]
+use tokenizers::{
+    decoders::DecoderWrapper, models::wordpiece::WordPieceTrainerBuilder,
+    normalizers::NormalizerWrapper, pre_tokenizers::whitespace::Whitespace,
+    processors::PostProcessorWrapper,
+};
 
 static BATCH_SIZE: usize = 1_000;
 
@@ -69,6 +73,7 @@ pub fn bench_bert(c: &mut Criterion) {
     });
 }
 
+#[cfg(feature = "trainer")]
 fn bench_train(c: &mut Criterion) {
     #[cfg(feature = "progressbar")]
     let trainer = WordPieceTrainerBuilder::default()
@@ -116,10 +121,14 @@ criterion_group! {
     targets = bench_bert
 }
 
+#[cfg(feature = "trainer")]
 criterion_group! {
     name = benches_train;
     config = Criterion::default().sample_size(10);
     targets = bench_train
 }
 
+#[cfg(not(feature = "trainer"))]
+criterion_main!(bert_benches);
+#[cfg(feature = "trainer")]
 criterion_main!(bert_benches, benches_train);

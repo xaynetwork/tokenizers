@@ -1,13 +1,16 @@
 #[cfg(not(debug_assertions))]
 use assert_approx_eq::assert_approx_eq;
-use std::collections::HashMap;
-use std::fs::read_to_string;
 use std::path::Path;
+#[cfg(feature = "trainer")]
+use std::{collections::HashMap, fs::read_to_string};
 #[cfg(not(debug_assertions))]
 use tokenizers::models::unigram::Lattice;
 use tokenizers::models::unigram::Unigram;
+#[cfg(feature = "trainer")]
 use tokenizers::models::unigram::UnigramTrainer;
-use tokenizers::tokenizer::{Model, Trainer};
+use tokenizers::tokenizer::Model;
+#[cfg(feature = "trainer")]
+use tokenizers::tokenizer::Trainer;
 
 #[test]
 fn test_unigram_from_file() {
@@ -38,6 +41,7 @@ fn test_unigram_from_file() {
     );
 }
 
+#[cfg(feature = "trainer")]
 #[test]
 fn test_train_unigram_from_file() {
     let content = read_to_string("data/small.txt").unwrap();
@@ -57,7 +61,10 @@ fn test_train_unigram_from_file() {
         .build()
         .unwrap();
     #[cfg(not(feature = "progressbar"))]
-    let trainer = UnigramTrainer::builder().build().unwrap();
+    let trainer = UnigramTrainer::builder()
+        .unk_token(Some("<UNK>".into()))
+        .build()
+        .unwrap();
     let (model, _) = trainer.train(word_counts).unwrap();
     assert_eq!(model.get_vocab_size(), 719);
 }

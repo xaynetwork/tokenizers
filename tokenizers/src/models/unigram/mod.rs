@@ -2,9 +2,11 @@
 mod lattice;
 mod model;
 mod serialization;
+#[cfg(feature = "trainer")]
 mod trainer;
 mod trie;
 
 pub use lattice::*;
 pub use model::*;
+#[cfg(feature = "trainer")]
 pub use trainer::*;

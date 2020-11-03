@@ -3,6 +3,7 @@ use std::{convert::From, io, iter, mem};
 
 mod model;
 mod serialization;
+#[cfg(feature = "trainer")]
 mod trainer;
 mod word;
 
@@ -111,5 +112,6 @@ where
 
 // Re-export
 pub use model::*;
+#[cfg(feature = "trainer")]
 pub use trainer::*;
 use word::*;
