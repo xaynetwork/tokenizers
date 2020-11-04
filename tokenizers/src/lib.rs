@@ -45,7 +45,6 @@
 //! ## Training and serialization example
 //!  
 //! ```no_run
-//! # #![cfg(all(feature = "progressbar", feature = "trainer"))]
 //! use tokenizers::decoders::DecoderWrapper;
 //! use tokenizers::models::bpe::{BpeTrainerBuilder, BPE};
 //! use tokenizers::normalizers::{strip::Strip, unicode::NFC, utils::Sequence, NormalizerWrapper};
@@ -59,8 +58,8 @@
 //! fn main() -> Result<()> {
 //!     let vocab_size: usize = 100;
 //!
-//!     let trainer = BpeTrainerBuilder::new() // requires "trainer" feature
-//!         .show_progress(true) // requires "progressbar" feature
+//!     let trainer = BpeTrainerBuilder::new()
+//!         .show_progress(true)
 //!         .vocab_size(vocab_size)
 //!         .min_frequency(0)
 //!         .special_tokens(vec![
@@ -93,8 +92,6 @@
 //!
 //!     Ok(())
 //! }
-//! # #[cfg(not(all(feature = "progressbar", feature = "trainer")))]
-//! # fn main() {}
 //! ```
 //!
 //! # Additional information
@@ -103,19 +100,14 @@
 //! by the total number of core/threads your CPU provides but this can be tuned by setting the `RAYON_RS_NUM_CPUS`
 //! environment variable. As an example setting `RAYON_RS_NUM_CPUS=4` will allocate a maximum of 4 threads.
 //! **_Please note this behavior may evolve in the future_**
-//!
-//! # Features
-//!
-//! - **progressbar**: The progress bar visualization is enabled by default. It might be disabled if
-//! compilation for certain targets is not supported or to save some binary space.
-//! - **trainer**: The word model trainers are enabled by default. They might be disabled if
-//! compilation for certain targets is not supported or to save some binary space.
 
 #[macro_use]
 extern crate log;
+#[cfg(not(feature = "bert"))]
 #[macro_use]
 extern crate lazy_static;
 
+#[cfg(not(feature = "bert"))]
 #[macro_use]
 extern crate derive_builder;
 

@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use criterion::black_box;
 
-#[cfg(feature = "trainer")]
+#[cfg(not(feature = "bert"))]
 use tokenizers::Trainer;
 use tokenizers::{
     Decoder, EncodeInput, Model, Normalizer, PostProcessor, PreTokenizer, TokenizerImpl,
@@ -60,7 +60,7 @@ where
     duration
 }
 
-#[cfg(feature = "trainer")]
+#[cfg(not(feature = "bert"))]
 pub fn iter_bench_train<T, M, N, PT, PP, D>(
     iters: u64,
     tokenizer: &mut TokenizerImpl<M, N, PT, PP, D>,

@@ -1,25 +1,32 @@
 pub mod bert;
+#[cfg(not(feature = "bert"))]
 pub mod roberta;
+#[cfg(not(feature = "bert"))]
 pub mod template;
 
 // Re-export these as processors
+#[cfg(not(feature = "bert"))]
 pub use super::pre_tokenizers::byte_level;
 
 use serde::{Deserialize, Serialize};
 
-use crate::pre_tokenizers::byte_level::ByteLevel;
-use crate::processors::bert::BertProcessing;
-use crate::processors::roberta::RobertaProcessing;
-use crate::processors::template::TemplateProcessing;
-use crate::{Encoding, PostProcessor, Result};
+#[cfg(not(feature = "bert"))]
+use crate::{
+    pre_tokenizers::byte_level::ByteLevel,
+    processors::{roberta::RobertaProcessing, template::TemplateProcessing},
+};
+use crate::{processors::bert::BertProcessing, Encoding, PostProcessor, Result};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[serde(untagged)]
 pub enum PostProcessorWrapper {
     // Roberta must be before Bert for deserialization (serde does not validate tags)
+    #[cfg(not(feature = "bert"))]
     Roberta(RobertaProcessing),
     Bert(BertProcessing),
+    #[cfg(not(feature = "bert"))]
     ByteLevel(ByteLevel),
+    #[cfg(not(feature = "bert"))]
     Template(TemplateProcessing),
 }
 
@@ -27,8 +34,11 @@ impl PostProcessor for PostProcessorWrapper {
     fn added_tokens(&self, is_pair: bool) -> usize {
         match self {
             PostProcessorWrapper::Bert(bert) => bert.added_tokens(is_pair),
+            #[cfg(not(feature = "bert"))]
             PostProcessorWrapper::ByteLevel(bl) => bl.added_tokens(is_pair),
+            #[cfg(not(feature = "bert"))]
             PostProcessorWrapper::Roberta(roberta) => roberta.added_tokens(is_pair),
+            #[cfg(not(feature = "bert"))]
             PostProcessorWrapper::Template(template) => template.added_tokens(is_pair),
         }
     }
@@ -43,12 +53,15 @@ impl PostProcessor for PostProcessorWrapper {
             PostProcessorWrapper::Bert(bert) => {
                 bert.process(encoding, pair_encoding, add_special_tokens)
             }
+            #[cfg(not(feature = "bert"))]
             PostProcessorWrapper::ByteLevel(bl) => {
                 bl.process(encoding, pair_encoding, add_special_tokens)
             }
+            #[cfg(not(feature = "bert"))]
             PostProcessorWrapper::Roberta(roberta) => {
                 roberta.process(encoding, pair_encoding, add_special_tokens)
             }
+            #[cfg(not(feature = "bert"))]
             PostProcessorWrapper::Template(template) => {
                 template.process(encoding, pair_encoding, add_special_tokens)
             }
@@ -57,14 +70,19 @@ impl PostProcessor for PostProcessorWrapper {
 }
 
 impl_enum_from!(BertProcessing, PostProcessorWrapper, Bert);
+#[cfg(not(feature = "bert"))]
 impl_enum_from!(ByteLevel, PostProcessorWrapper, ByteLevel);
+#[cfg(not(feature = "bert"))]
 impl_enum_from!(RobertaProcessing, PostProcessorWrapper, Roberta);
+#[cfg(not(feature = "bert"))]
 impl_enum_from!(TemplateProcessing, PostProcessorWrapper, Template);
 
 #[cfg(test)]
 mod tests {
+    #[cfg(not(feature = "bert"))]
     use super::*;
 
+    #[cfg(not(feature = "bert"))]
     #[test]
     fn deserialize_bert_roberta_correctly() {
         let roberta = RobertaProcessing::default();

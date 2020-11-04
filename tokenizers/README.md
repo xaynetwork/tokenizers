@@ -71,8 +71,8 @@ use std::path::Path;
 fn main() -> Result<()> {
     let vocab_size: usize = 100;
 
-    let trainer = BpeTrainerBuilder::new() // requires "trainer" feature
-        .show_progress(true) // requires "progressbar" feature
+    let trainer = BpeTrainerBuilder::new()
+        .show_progress(true)
         .vocab_size(vocab_size)
         .min_frequency(0)
         .special_tokens(vec![
@@ -113,10 +113,3 @@ fn main() -> Result<()> {
 by the total number of core/threads your CPU provides but this can be tuned by setting the `RAYON_RS_NUM_CPUS`
 environment variable. As an example setting `RAYON_RS_NUM_CPUS=4` will allocate a maximum of 4 threads.
 **_Please note this behavior may evolve in the future_**
-
-## Features
-
-- **progressbar**: The progress bar visualization is enabled by default. It might be disabled if
-compilation for certain targets is not supported or to save some binary space.
-- **trainer**: The word model trainers are enabled by default. They might be disabled if
-compilation for certain targets is not supported or to save some binary space.

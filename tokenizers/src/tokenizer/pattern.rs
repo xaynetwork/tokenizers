@@ -59,6 +59,7 @@ impl Pattern for &Regex {
     }
 }
 
+#[cfg(not(feature = "bert"))]
 impl Pattern for &onig::Regex {
     fn find_matches(&self, inside: &str) -> Result<Vec<(Offsets, bool)>> {
         if inside.is_empty() {
@@ -204,6 +205,7 @@ mod tests {
         do_test!("aaa", &is_whitespace => vec![((0, 3), false)]);
     }
 
+    #[cfg(not(feature = "bert"))]
     #[test]
     fn onig_regex() {
         let is_whitespace = onig::Regex::new(r"\s+").unwrap();

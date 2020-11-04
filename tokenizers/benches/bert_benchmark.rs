@@ -7,21 +7,22 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
-#[cfg(feature = "trainer")]
-use common::iter_bench_train;
-use common::{iter_bench_encode, iter_bench_encode_batch};
 use criterion::Criterion;
 use tokenizers::{
     decoders, models::wordpiece::WordPiece, normalizers::BertNormalizer,
     pre_tokenizers::bert::BertPreTokenizer, processors::bert::BertProcessing, EncodeInput, Model,
     TokenizerImpl,
 };
-#[cfg(feature = "trainer")]
+#[cfg(not(feature = "bert"))]
 use tokenizers::{
     decoders::DecoderWrapper, models::wordpiece::WordPieceTrainerBuilder,
     normalizers::NormalizerWrapper, pre_tokenizers::whitespace::Whitespace,
     processors::PostProcessorWrapper,
 };
+
+#[cfg(not(feature = "bert"))]
+use common::iter_bench_train;
+use common::{iter_bench_encode, iter_bench_encode_batch};
 
 static BATCH_SIZE: usize = 1_000;
 
@@ -73,14 +74,11 @@ pub fn bench_bert(c: &mut Criterion) {
     });
 }
 
-#[cfg(feature = "trainer")]
+#[cfg(not(feature = "bert"))]
 fn bench_train(c: &mut Criterion) {
-    #[cfg(feature = "progressbar")]
     let trainer = WordPieceTrainerBuilder::default()
         .show_progress(false)
         .build();
-    #[cfg(not(feature = "progressbar"))]
-    let trainer = WordPieceTrainerBuilder::default().build();
     type Tok = TokenizerImpl<
         WordPiece,
         NormalizerWrapper,
@@ -121,14 +119,14 @@ criterion_group! {
     targets = bench_bert
 }
 
-#[cfg(feature = "trainer")]
+#[cfg(not(feature = "bert"))]
 criterion_group! {
     name = benches_train;
     config = Criterion::default().sample_size(10);
     targets = bench_train
 }
 
-#[cfg(not(feature = "trainer"))]
-criterion_main!(bert_benches);
-#[cfg(feature = "trainer")]
+#[cfg(not(feature = "bert"))]
 criterion_main!(bert_benches, benches_train);
+#[cfg(feature = "bert")]
+criterion_main!(bert_benches);

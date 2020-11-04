@@ -74,7 +74,6 @@ impl std::fmt::Debug for Word {
 }
 
 impl Word {
-    #[cfg(any(feature = "trainer", test))]
     pub(super) fn new() -> Self {
         Word { symbols: vec![] }
     }
@@ -104,7 +103,6 @@ impl Word {
         });
     }
 
-    #[cfg(any(feature = "trainer", test))]
     pub(super) fn merge(&mut self, c1: u32, c2: u32, replacement: u32) -> Vec<(Pair, i32)> {
         let mut changes: Vec<(Pair, i32)> = vec![];
         let mut i = 0;
@@ -242,7 +240,6 @@ impl Word {
         self.symbols.retain(|s| s.len != 0);
     }
 
-    #[cfg(any(feature = "trainer", test))]
     pub(super) fn get_chars(&self) -> Vec<u32> {
         self.symbols.iter().map(|s| s.c).collect()
     }

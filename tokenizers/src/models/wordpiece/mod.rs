@@ -1,6 +1,7 @@
 //! [WordPiece](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/37842.pdf)
 //! model.
 
+#[cfg(not(feature = "bert"))]
 use crate::models::bpe::BPE;
 use crate::tokenizer::{Model, Result, Token};
 use std::{
@@ -14,9 +15,9 @@ use std::{
 };
 
 mod serialization;
-#[cfg(feature = "trainer")]
+#[cfg(not(feature = "bert"))]
 mod trainer;
-#[cfg(feature = "trainer")]
+#[cfg(not(feature = "bert"))]
 pub use trainer::*;
 
 #[derive(Debug)]
@@ -185,6 +186,7 @@ impl WordPiece {
         WordPiece::builder().files(vocab.to_owned())
     }
 
+    #[cfg(not(feature = "bert"))]
     /// Create a `WordPiece` model from a `BPE` model.
     pub fn from_bpe(bpe: &BPE) -> Self {
         let mut wp = Self::builder()

@@ -1,14 +1,12 @@
-use tokenizers::Tokenizer;
-#[cfg(feature = "trainer")]
-use tokenizers::{
-    models::bpe::{BpeTrainerBuilder, BPE},
-    normalizers::{Sequence, Strip, NFC},
-    pre_tokenizers::byte_level::ByteLevel,
-    AddedToken, DecoderWrapper, NormalizerWrapper, PostProcessorWrapper, PreTokenizerWrapper,
-    TokenizerBuilder, TokenizerImpl,
-};
+#![cfg(not(feature = "bert"))]
 
-#[cfg(feature = "trainer")]
+use tokenizers::models::bpe::{BpeTrainerBuilder, BPE};
+use tokenizers::normalizers::{Sequence, Strip, NFC};
+use tokenizers::pre_tokenizers::byte_level::ByteLevel;
+use tokenizers::{AddedToken, TokenizerBuilder};
+use tokenizers::{DecoderWrapper, NormalizerWrapper, PostProcessorWrapper, PreTokenizerWrapper};
+use tokenizers::{Tokenizer, TokenizerImpl};
+
 #[test]
 fn train_tokenizer() {
     let vocab_size: usize = 100;
@@ -24,21 +22,8 @@ fn train_tokenizer() {
         .build()
         .unwrap();
 
-    #[cfg(feature = "progressbar")]
     let trainer = BpeTrainerBuilder::new()
         .show_progress(false)
-        .vocab_size(vocab_size)
-        .min_frequency(0)
-        .special_tokens(vec![
-            AddedToken::from(String::from("<s>"), true),
-            AddedToken::from(String::from("<pad>"), true),
-            AddedToken::from(String::from("</s>"), true),
-            AddedToken::from(String::from("<unk>"), true),
-            AddedToken::from(String::from("<mask>"), true),
-        ])
-        .build();
-    #[cfg(not(feature = "progressbar"))]
-    let trainer = BpeTrainerBuilder::new()
         .vocab_size(vocab_size)
         .min_frequency(0)
         .special_tokens(vec![
@@ -75,7 +60,6 @@ fn load_tokenizer() {
     assert_eq!(decoded, example);
 }
 
-#[cfg(feature = "trainer")]
 #[test]
 #[ignore]
 fn quicktour_slow_train() -> tokenizers::Result<()> {
@@ -386,7 +370,6 @@ fn pipeline() -> tokenizers::Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "trainer")]
 #[test]
 #[ignore]
 fn train_pipeline_bert() -> tokenizers::Result<()> {

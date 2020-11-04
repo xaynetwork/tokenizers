@@ -144,6 +144,7 @@ impl Encoding {
         std::mem::replace(&mut self.overflowing, vec![])
     }
 
+    #[cfg(not(feature = "bert"))]
     pub(crate) fn process_tokens_with_offsets_mut<F>(&mut self, func: F)
     where
         F: FnMut((usize, (&String, &mut Offsets))),

@@ -122,7 +122,7 @@ pub struct NormalizedString {
 }
 
 impl NormalizedString {
-    #[cfg(test)]
+    #[cfg(all(test, not(feature = "bert")))]
     pub(crate) fn new(
         original: String,
         normalized: String,
