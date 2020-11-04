@@ -1,6 +1,5 @@
 use crate::models::unigram::{lattice::Lattice, model::Unigram};
 use crate::tokenizer::{AddedToken, Result, Trainer};
-#[cfg(feature = "progressbar")]
 use indicatif::{ProgressBar, ProgressStyle};
 use log::debug;
 use std::cmp::Reverse;
@@ -39,8 +38,7 @@ fn to_log_prob(pieces: &mut [SentencePiece]) {
 /// A `UnigramTrainer` can train a `Unigram` model from `word_counts`.
 #[derive(Builder, Debug, Clone)]
 pub struct UnigramTrainer {
-    #[cfg(feature = "progressbar")]
-    #[cfg_attr(feature = "progressbar", builder(default = "true"))]
+    #[builder(default = "true")]
     show_progress: bool,
     #[builder(default = "8000")]
     vocab_size: u32,
@@ -67,7 +65,6 @@ impl UnigramTrainer {
         UnigramTrainerBuilder::default()
     }
 
-    #[cfg(feature = "progressbar")]
     /// Setup a progress bar if asked to show progress
     fn setup_progress(&self) -> Option<ProgressBar> {
         if self.show_progress {
@@ -169,7 +166,7 @@ impl UnigramTrainer {
     fn make_seed_sentence_pieces(
         &self,
         sentences: &[Sentence],
-        #[cfg(feature = "progressbar")] _progress: &Option<ProgressBar>,
+        _progress: &Option<ProgressBar>,
     ) -> Result<Vec<SentencePiece>> {
         // Put all sentences in a string, separated by \0
         let total: usize = sentences
@@ -214,7 +211,6 @@ impl UnigramTrainer {
                     return None;
                 }
                 let score = freq * string.len() as u32;
-                // #[cfg(feature = "progressbar")]
                 // if let Some(p) = &progress {
                 //     p.inc(1);
                 // }
@@ -372,7 +368,6 @@ impl UnigramTrainer {
         new_pieces.to_vec()
     }
 
-    #[cfg(feature = "progressbar")]
     /// Update the progress bar with the new provided length and message
     fn update_progress(&self, p: &Option<ProgressBar>, len: usize, message: &str) {
         if let Some(p) = p {
@@ -382,7 +377,6 @@ impl UnigramTrainer {
             p.reset();
         }
     }
-    #[cfg(feature = "progressbar")]
     /// Set the progress bar in the finish state
     fn finalize_progress(&self, p: &Option<ProgressBar>, final_len: usize) {
         if let Some(p) = p {
@@ -451,24 +445,17 @@ impl UnigramTrainer {
         new_pieces
     }
     pub fn _train(&self, sentences: Vec<Sentence>) -> Result<(Unigram, Vec<AddedToken>)> {
-        #[cfg(feature = "progressbar")]
         let progress = self.setup_progress();
         //
         // 1. Compute frequent substrings
         // TODO Should be able to upgrade to u64 when needed
-        #[cfg(feature = "progressbar")]
         self.update_progress(&progress, sentences.len(), "Suffix array seeds");
         let mut pieces: Vec<SentencePiece> =
             Vec::with_capacity(self.vocab_size.try_into().unwrap());
 
         // We use a UNK token when training, whatever the `self.unk_token`
         pieces.push(("<UNK>".into(), f64::NAN));
-        pieces.extend(self.make_seed_sentence_pieces(
-            &sentences,
-            #[cfg(feature = "progressbar")]
-            &progress,
-        )?);
-        #[cfg(feature = "progressbar")]
+        pieces.extend(self.make_seed_sentence_pieces(&sentences, &progress)?);
         self.finalize_progress(&progress, sentences.len());
 
         // Useful to check compatibility with spm.
@@ -485,14 +472,10 @@ impl UnigramTrainer {
         // Some other pieces are dropped if logprob is too small
         // V = N * (f)**k
         // k = log(V / N) / log(f)
-        #[cfg(feature = "progressbar")]
-        let expected_updates = {
-            let expected_loops = (((desired_vocab_size as f64).ln() - (pieces.len() as f64).ln())
-                / self.shrinking_factor.ln()) as usize
-                + 1;
-            expected_loops as usize * self.n_sub_iterations as usize
-        };
-        #[cfg(feature = "progressbar")]
+        let expected_loops = (((desired_vocab_size as f64).ln() - (pieces.len() as f64).ln())
+            / self.shrinking_factor.ln()) as usize
+            + 1;
+        let expected_updates = expected_loops as usize * self.n_sub_iterations as usize;
         self.update_progress(&progress, expected_updates, "EM training");
         let required_chars = self.required_chars(&sentences);
         let mut model = Unigram::from(pieces.clone(), Some(0))?;
@@ -515,7 +498,6 @@ impl UnigramTrainer {
                     _num_tokens,
                     _num_tokens as f64 / model.len() as f64
                 );
-                #[cfg(feature = "progressbar")]
                 if let Some(p) = &progress {
                     p.inc(1);
                 }
@@ -531,7 +513,6 @@ impl UnigramTrainer {
             pieces = self.prune_sentence_pieces(&model, &pieces, &sentences);
             model = Unigram::from(pieces.clone(), Some(0))?;
         }
-        #[cfg(feature = "progressbar")]
         self.finalize_progress(&progress, expected_updates);
 
         // Finally, adjusts the size of sentencepices to be |vocab_size|.
@@ -560,7 +541,6 @@ impl Trainer for UnigramTrainer {
         }
     }
 
-    #[cfg(feature = "progressbar")]
     /// Whether we should show progress
     fn should_show_progress(&self) -> bool {
         self.show_progress
@@ -575,13 +555,10 @@ mod tests {
 
     #[test]
     fn test_unigram_chars() {
-        #[cfg(feature = "progressbar")]
         let trainer = UnigramTrainerBuilder::default()
             .show_progress(false)
             .build()
             .unwrap();
-        #[cfg(not(feature = "progressbar"))]
-        let trainer = UnigramTrainerBuilder::default().build().unwrap();
 
         let sentences = vec![
             ("This is a".to_string(), 1),
@@ -591,14 +568,9 @@ mod tests {
         let required_chars = trainer.required_chars(&sentences);
         assert_eq!(required_chars.len(), 13);
 
-        #[cfg(feature = "progressbar")]
         let progress = None;
         let table = trainer
-            .make_seed_sentence_pieces(
-                &sentences,
-                #[cfg(feature = "progressbar")]
-                &progress,
-            )
+            .make_seed_sentence_pieces(&sentences, &progress)
             .unwrap();
 
         let target_strings = vec![
@@ -634,14 +606,8 @@ mod tests {
 
     #[test]
     fn test_initial_alphabet() {
-        #[cfg(feature = "progressbar")]
         let trainer = UnigramTrainerBuilder::default()
             .show_progress(false)
-            .initial_alphabet(HashSet::from_iter(vec!['a', 'b', 'c', 'd', 'e', 'f']))
-            .build()
-            .unwrap();
-        #[cfg(not(feature = "progressbar"))]
-        let trainer = UnigramTrainerBuilder::default()
             .initial_alphabet(HashSet::from_iter(vec!['a', 'b', 'c', 'd', 'e', 'f']))
             .build()
             .unwrap();
@@ -661,18 +627,8 @@ mod tests {
     #[test]
     fn test_unk_token() {
         // 1. Should add `unk_token` as first special token
-        #[cfg(feature = "progressbar")]
         let trainer = UnigramTrainerBuilder::default()
             .show_progress(false)
-            .special_tokens(vec![
-                AddedToken::from("[SEP]", true),
-                AddedToken::from("[CLS]", true),
-            ])
-            .unk_token(Some("[UNK]".into()))
-            .build()
-            .unwrap();
-        #[cfg(not(feature = "progressbar"))]
-        let trainer = UnigramTrainerBuilder::default()
             .special_tokens(vec![
                 AddedToken::from("[SEP]", true),
                 AddedToken::from("[CLS]", true),
@@ -694,19 +650,8 @@ mod tests {
         assert_eq!(pieces.next(), Some(&("[CLS]".into(), 0.0)));
 
         // 2. Let it where it is
-        #[cfg(feature = "progressbar")]
         let trainer = UnigramTrainerBuilder::default()
             .show_progress(false)
-            .special_tokens(vec![
-                AddedToken::from("[SEP]", true),
-                AddedToken::from("[CLS]", true),
-                AddedToken::from("[UNK]", true),
-            ])
-            .unk_token(Some("[UNK]".into()))
-            .build()
-            .unwrap();
-        #[cfg(not(feature = "progressbar"))]
-        let trainer = UnigramTrainerBuilder::default()
             .special_tokens(vec![
                 AddedToken::from("[SEP]", true),
                 AddedToken::from("[CLS]", true),
@@ -729,13 +674,10 @@ mod tests {
         assert_eq!(pieces.next(), Some(&("[UNK]".into(), 0.0)));
 
         // 3. Don't put it there if not needed
-        #[cfg(feature = "progressbar")]
         let trainer = UnigramTrainerBuilder::default()
             .show_progress(false)
             .build()
             .unwrap();
-        #[cfg(not(feature = "progressbar"))]
-        let trainer = UnigramTrainerBuilder::default().build().unwrap();
 
         let (unigram, _) = trainer
             .train(HashMap::from_iter(vec![
@@ -750,17 +692,8 @@ mod tests {
 
     #[test]
     fn test_special_tokens() {
-        #[cfg(feature = "progressbar")]
         let trainer = UnigramTrainerBuilder::default()
             .show_progress(false)
-            .special_tokens(vec![
-                AddedToken::from("[SEP]", true),
-                AddedToken::from("[CLS]", true),
-            ])
-            .build()
-            .unwrap();
-        #[cfg(not(feature = "progressbar"))]
-        let trainer = UnigramTrainerBuilder::default()
             .special_tokens(vec![
                 AddedToken::from("[SEP]", true),
                 AddedToken::from("[CLS]", true),

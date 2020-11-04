@@ -1,3 +1,4 @@
+#[cfg(not(feature = "bert"))]
 pub mod cache;
 pub mod iter;
 pub mod padding;

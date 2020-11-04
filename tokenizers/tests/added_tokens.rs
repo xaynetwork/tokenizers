@@ -1,3 +1,5 @@
+#![cfg(not(feature = "bert"))]
+
 mod common;
 
 use common::*;

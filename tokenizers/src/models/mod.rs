@@ -1,7 +1,10 @@
 //! Popular tokenizer models.
 
+#[cfg(not(feature = "bert"))]
 pub mod bpe;
+#[cfg(not(feature = "bert"))]
 pub mod unigram;
+#[cfg(not(feature = "bert"))]
 pub mod wordlevel;
 pub mod wordpiece;
 
@@ -10,19 +13,17 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize, Serializer};
 
-#[cfg(feature = "trainer")]
-use crate::models::bpe::BpeTrainer;
-use crate::models::bpe::BPE;
-use crate::models::unigram::Unigram;
-#[cfg(feature = "trainer")]
-use crate::models::unigram::UnigramTrainer;
-use crate::models::wordlevel::WordLevel;
-use crate::models::wordpiece::WordPiece;
-#[cfg(feature = "trainer")]
-use crate::models::wordpiece::WordPieceTrainer;
-#[cfg(feature = "trainer")]
-use crate::{AddedToken, Trainer};
-use crate::{Model, Result, Token};
+use crate::{models::wordpiece::WordPiece, Model, Result, Token};
+#[cfg(not(feature = "bert"))]
+use crate::{
+    models::{
+        bpe::{BpeTrainer, BPE},
+        unigram::{Unigram, UnigramTrainer},
+        wordlevel::WordLevel,
+        wordpiece::WordPieceTrainer,
+    },
+    AddedToken, Trainer,
+};
 
 /// Wraps a vocab mapping (ID -> token) to a struct that will be serialized in order
 /// of token ID, smallest to largest.
@@ -50,23 +51,32 @@ impl<'a> Serialize for OrderedVocabIter<'a> {
 #[serde(untagged)]
 pub enum ModelWrapper {
     WordPiece(WordPiece),
+    #[cfg(not(feature = "bert"))]
     BPE(BPE),
+    #[cfg(not(feature = "bert"))]
     WordLevel(WordLevel),
+    #[cfg(not(feature = "bert"))]
     Unigram(Unigram),
 }
 
+#[cfg(not(feature = "bert"))]
 impl_enum_from!(WordLevel, ModelWrapper, WordLevel);
 impl_enum_from!(WordPiece, ModelWrapper, WordPiece);
+#[cfg(not(feature = "bert"))]
 impl_enum_from!(BPE, ModelWrapper, BPE);
+#[cfg(not(feature = "bert"))]
 impl_enum_from!(Unigram, ModelWrapper, Unigram);
 
 impl Model for ModelWrapper {
     fn tokenize(&self, tokens: &str) -> Result<Vec<Token>> {
         use ModelWrapper::*;
         match self {
+            #[cfg(not(feature = "bert"))]
             WordLevel(t) => t.tokenize(tokens),
             WordPiece(t) => t.tokenize(tokens),
+            #[cfg(not(feature = "bert"))]
             BPE(t) => t.tokenize(tokens),
+            #[cfg(not(feature = "bert"))]
             Unigram(t) => t.tokenize(tokens),
         }
     }
@@ -74,9 +84,12 @@ impl Model for ModelWrapper {
     fn token_to_id(&self, token: &str) -> Option<u32> {
         use ModelWrapper::*;
         match self {
+            #[cfg(not(feature = "bert"))]
             WordLevel(t) => t.token_to_id(token),
             WordPiece(t) => t.token_to_id(token),
+            #[cfg(not(feature = "bert"))]
             BPE(t) => t.token_to_id(token),
+            #[cfg(not(feature = "bert"))]
             Unigram(t) => t.token_to_id(token),
         }
     }
@@ -84,9 +97,12 @@ impl Model for ModelWrapper {
     fn id_to_token(&self, id: u32) -> Option<&str> {
         use ModelWrapper::*;
         match self {
+            #[cfg(not(feature = "bert"))]
             WordLevel(t) => t.id_to_token(id),
             WordPiece(t) => t.id_to_token(id),
+            #[cfg(not(feature = "bert"))]
             BPE(t) => t.id_to_token(id),
+            #[cfg(not(feature = "bert"))]
             Unigram(t) => t.id_to_token(id),
         }
     }
@@ -94,9 +110,12 @@ impl Model for ModelWrapper {
     fn get_vocab(&self) -> &HashMap<String, u32> {
         use ModelWrapper::*;
         match self {
+            #[cfg(not(feature = "bert"))]
             WordLevel(t) => t.get_vocab(),
             WordPiece(t) => t.get_vocab(),
+            #[cfg(not(feature = "bert"))]
             BPE(t) => t.get_vocab(),
+            #[cfg(not(feature = "bert"))]
             Unigram(t) => t.get_vocab(),
         }
     }
@@ -104,9 +123,12 @@ impl Model for ModelWrapper {
     fn get_vocab_size(&self) -> usize {
         use ModelWrapper::*;
         match self {
+            #[cfg(not(feature = "bert"))]
             WordLevel(t) => t.get_vocab_size(),
             WordPiece(t) => t.get_vocab_size(),
+            #[cfg(not(feature = "bert"))]
             BPE(t) => t.get_vocab_size(),
+            #[cfg(not(feature = "bert"))]
             Unigram(t) => t.get_vocab_size(),
         }
     }
@@ -114,26 +136,28 @@ impl Model for ModelWrapper {
     fn save(&self, folder: &Path, name: Option<&str>) -> Result<Vec<PathBuf>> {
         use ModelWrapper::*;
         match self {
+            #[cfg(not(feature = "bert"))]
             WordLevel(t) => t.save(folder, name),
             WordPiece(t) => t.save(folder, name),
+            #[cfg(not(feature = "bert"))]
             BPE(t) => t.save(folder, name),
+            #[cfg(not(feature = "bert"))]
             Unigram(t) => t.save(folder, name),
         }
     }
 }
 
-#[cfg(feature = "trainer")]
+#[cfg(not(feature = "bert"))]
 pub enum TrainerWrapper {
     BpeTrainer(BpeTrainer),
     WordPieceTrainer(WordPieceTrainer),
     UnigramTrainer(UnigramTrainer),
 }
 
-#[cfg(feature = "trainer")]
+#[cfg(not(feature = "bert"))]
 impl Trainer for TrainerWrapper {
     type Model = ModelWrapper;
 
-    #[cfg(feature = "progressbar")]
     fn should_show_progress(&self) -> bool {
         match self {
             TrainerWrapper::BpeTrainer(bpe) => bpe.should_show_progress(),
@@ -159,9 +183,9 @@ impl Trainer for TrainerWrapper {
     }
 }
 
-#[cfg(feature = "trainer")]
+#[cfg(not(feature = "bert"))]
 impl_enum_from!(BpeTrainer, TrainerWrapper, BpeTrainer);
-#[cfg(feature = "trainer")]
+#[cfg(not(feature = "bert"))]
 impl_enum_from!(WordPieceTrainer, TrainerWrapper, WordPieceTrainer);
-#[cfg(feature = "trainer")]
+#[cfg(not(feature = "bert"))]
 impl_enum_from!(UnigramTrainer, TrainerWrapper, UnigramTrainer);

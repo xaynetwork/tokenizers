@@ -1,3 +1,5 @@
+#![cfg(not(feature = "bert"))]
+
 use tokenizers::decoders::wordpiece::WordPiece as WordPieceDecoder;
 use tokenizers::models::bpe::BPE;
 use tokenizers::models::wordpiece::WordPiece;
