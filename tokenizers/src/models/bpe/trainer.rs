@@ -387,8 +387,8 @@ impl BpeTrainer {
 
                 (pair_counts, where_to_update)
             })
-            .reduce(
-                || (HashMap::new(), HashMap::new()),
+            .fold(
+                (HashMap::new(), HashMap::new()),
                 |(mut pair_counts, mut where_to_update), (pc, wtu)| {
                     for (k, v) in pc {
                         pair_counts.entry(k).and_modify(|c| *c += v).or_insert(v);
