@@ -998,39 +998,33 @@ where
                 // We use an iterator to be able to chain with par_bridge.
                 file.lines_with_ending()
                     .maybe_par_bridge()
-                    .map_with(
-                        &progress,
-                        |progress, line| -> Result<HashMap<String, u32>> {
-                            let newline = line?;
-                            let b = newline.len();
-                            let mut words = HashMap::new();
-                            let normalized = self.do_normalize(newline)?;
-                            let pre_tokenized = self.do_pre_tokenize(normalized)?;
-                            trainer.process_tokens(
-                                &mut words,
-                                pre_tokenized
-                                    .get_splits(OffsetReferential::Original, OffsetType::Byte)
-                                    .into_iter()
-                                    .map(|(s, _, _)| s.to_owned())
-                                    .collect(),
-                            );
+                    .map(|line| -> Result<HashMap<String, u32>> {
+                        let newline = line?;
+                        let b = newline.len();
+                        let mut words = HashMap::new();
+                        let normalized = self.do_normalize(newline)?;
+                        let pre_tokenized = self.do_pre_tokenize(normalized)?;
+                        trainer.process_tokens(
+                            &mut words,
+                            pre_tokenized
+                                .get_splits(OffsetReferential::Original, OffsetType::Byte)
+                                .into_iter()
+                                .map(|(s, _, _)| s.to_owned())
+                                .collect(),
+                        );
 
-                            if let Some(pbar) = progress {
-                                pbar.inc(b as u64);
-                            }
-                            Ok(words)
-                        },
-                    )
-                    .reduce(
-                        || Ok(HashMap::new()),
-                        |acc, ws| {
-                            let mut acc = acc?;
-                            for (k, v) in ws? {
-                                acc.entry(k).and_modify(|c| *c += v).or_insert(v);
-                            }
-                            Ok(acc)
-                        },
-                    )
+                        if let Some(pbar) = progress.as_ref() {
+                            pbar.inc(b as u64);
+                        }
+                        Ok(words)
+                    })
+                    .fold(Ok(HashMap::new()), |acc, ws| {
+                        let mut acc = acc?;
+                        for (k, v) in ws? {
+                            acc.entry(k).and_modify(|c| *c += v).or_insert(v);
+                        }
+                        Ok(acc)
+                    })
             })
             .try_fold(
                 HashMap::new(),
