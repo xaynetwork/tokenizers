@@ -3,6 +3,8 @@ pub mod cache;
 pub mod iter;
 pub mod padding;
 pub mod parallelism;
+#[cfg(not(feature = "bert"))]
+pub mod progress;
 pub mod truncation;
 
 use serde::{Serialize, Serializer};

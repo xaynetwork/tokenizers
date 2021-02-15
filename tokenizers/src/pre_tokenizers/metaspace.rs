@@ -9,7 +9,7 @@ use crate::tokenizer::{Decoder, PreTokenizedString, PreTokenizer, Result, SplitD
 pub struct Metaspace {
     replacement: char,
     str_rep: String,
-    add_prefix_space: bool,
+    pub add_prefix_space: bool,
 }
 
 impl Metaspace {
@@ -19,6 +19,15 @@ impl Metaspace {
             str_rep: replacement.to_string(),
             add_prefix_space,
         }
+    }
+
+    pub fn get_replacement(&self) -> char {
+        self.replacement
+    }
+
+    pub fn set_replacement(&mut self, replacement: char) {
+        self.replacement = replacement;
+        self.str_rep = replacement.to_string();
     }
 }
 
@@ -31,11 +40,11 @@ impl Default for Metaspace {
 impl PreTokenizer for Metaspace {
     fn pre_tokenize(&self, pretokenized: &mut PreTokenizedString) -> Result<()> {
         pretokenized.split(|_, mut normalized| {
+            normalized.replace(' ', &self.str_rep)?;
             if self.add_prefix_space && !normalized.get().starts_with(self.replacement) {
                 normalized.prepend(&self.str_rep);
             }
 
-            normalized.replace(' ', &self.str_rep)?;
             normalized.split(self.replacement, SplitDelimiterBehavior::MergedWithNext)
         })
     }

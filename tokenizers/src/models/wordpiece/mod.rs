@@ -133,9 +133,9 @@ impl WordPieceBuilder {
 pub struct WordPiece {
     vocab: Vocab,
     vocab_r: VocabR,
-    unk_token: String,
-    continuing_subword_prefix: String,
-    max_input_chars_per_word: usize,
+    pub unk_token: String,
+    pub continuing_subword_prefix: String,
+    pub max_input_chars_per_word: usize,
 }
 
 impl std::fmt::Debug for WordPiece {
@@ -189,10 +189,7 @@ impl WordPiece {
     #[cfg(not(feature = "bert"))]
     /// Create a `WordPiece` model from a `BPE` model.
     pub fn from_bpe(bpe: &BPE) -> Self {
-        let mut wp = Self::builder()
-            .vocab(bpe.get_vocab().clone())
-            .build()
-            .unwrap();
+        let mut wp = Self::builder().vocab(bpe.get_vocab()).build().unwrap();
         if let Some(unk) = bpe.get_unk_token() {
             wp.unk_token = unk.to_owned();
         }
@@ -204,8 +201,11 @@ impl WordPiece {
 }
 
 impl Model for WordPiece {
-    fn get_vocab(&self) -> &HashMap<String, u32> {
-        &self.vocab
+    #[cfg(not(feature = "bert"))]
+    type Trainer = WordPieceTrainer;
+
+    fn get_vocab(&self) -> HashMap<String, u32> {
+        self.vocab.clone()
     }
 
     fn get_vocab_size(&self) -> usize {
@@ -277,8 +277,8 @@ impl Model for WordPiece {
         self.vocab.get(token).copied()
     }
 
-    fn id_to_token(&self, id: u32) -> Option<&str> {
-        self.vocab_r.get(&id).map(String::as_ref)
+    fn id_to_token(&self, id: u32) -> Option<String> {
+        self.vocab_r.get(&id).cloned()
     }
 
     fn save(&self, folder: &Path, name: Option<&str>) -> Result<Vec<PathBuf>> {
@@ -302,6 +302,11 @@ impl Model for WordPiece {
         )?;
 
         Ok(vec![vocab_path])
+    }
+
+    #[cfg(not(feature = "bert"))]
+    fn get_trainer(&self) -> Self::Trainer {
+        WordPieceTrainer::builder().build()
     }
 }
 

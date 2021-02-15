@@ -19,7 +19,7 @@ use crate::{
     models::{
         bpe::{BpeTrainer, BPE},
         unigram::{Unigram, UnigramTrainer},
-        wordlevel::WordLevel,
+        wordlevel::{WordLevel, WordLevelTrainer},
         wordpiece::WordPieceTrainer,
     },
     AddedToken, Trainer,
@@ -50,9 +50,11 @@ impl<'a> Serialize for OrderedVocabIter<'a> {
 #[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
 #[serde(untagged)]
 pub enum ModelWrapper {
-    WordPiece(WordPiece),
     #[cfg(not(feature = "bert"))]
     BPE(BPE),
+    // WordPiece must stay before WordLevel here for deserialization (for retrocompatibility
+    // with the versions not including the "type"), since WordLevel is a subset of WordPiece
+    WordPiece(WordPiece),
     #[cfg(not(feature = "bert"))]
     WordLevel(WordLevel),
     #[cfg(not(feature = "bert"))]
@@ -68,6 +70,9 @@ impl_enum_from!(BPE, ModelWrapper, BPE);
 impl_enum_from!(Unigram, ModelWrapper, Unigram);
 
 impl Model for ModelWrapper {
+    #[cfg(not(feature = "bert"))]
+    type Trainer = TrainerWrapper;
+
     fn tokenize(&self, tokens: &str) -> Result<Vec<Token>> {
         use ModelWrapper::*;
         match self {
@@ -94,7 +99,7 @@ impl Model for ModelWrapper {
         }
     }
 
-    fn id_to_token(&self, id: u32) -> Option<&str> {
+    fn id_to_token(&self, id: u32) -> Option<String> {
         use ModelWrapper::*;
         match self {
             #[cfg(not(feature = "bert"))]
@@ -107,7 +112,7 @@ impl Model for ModelWrapper {
         }
     }
 
-    fn get_vocab(&self) -> &HashMap<String, u32> {
+    fn get_vocab(&self) -> HashMap<String, u32> {
         use ModelWrapper::*;
         match self {
             #[cfg(not(feature = "bert"))]
@@ -145,12 +150,27 @@ impl Model for ModelWrapper {
             Unigram(t) => t.save(folder, name),
         }
     }
+
+    #[cfg(not(feature = "bert"))]
+    fn get_trainer(&self) -> Self::Trainer {
+        use ModelWrapper::*;
+        match self {
+            #[cfg(not(feature = "bert"))]
+            WordLevel(t) => t.get_trainer().into(),
+            WordPiece(t) => t.get_trainer().into(),
+            #[cfg(not(feature = "bert"))]
+            BPE(t) => t.get_trainer().into(),
+            #[cfg(not(feature = "bert"))]
+            Unigram(t) => t.get_trainer().into(),
+        }
+    }
 }
 
 #[cfg(not(feature = "bert"))]
 pub enum TrainerWrapper {
     BpeTrainer(BpeTrainer),
     WordPieceTrainer(WordPieceTrainer),
+    WordLevelTrainer(WordLevelTrainer),
     UnigramTrainer(UnigramTrainer),
 }
 
@@ -162,23 +182,43 @@ impl Trainer for TrainerWrapper {
         match self {
             TrainerWrapper::BpeTrainer(bpe) => bpe.should_show_progress(),
             TrainerWrapper::WordPieceTrainer(wpt) => wpt.should_show_progress(),
+            TrainerWrapper::WordLevelTrainer(wpt) => wpt.should_show_progress(),
             TrainerWrapper::UnigramTrainer(wpt) => wpt.should_show_progress(),
         }
     }
 
-    fn train(&self, words: HashMap<String, u32>) -> Result<(Self::Model, Vec<AddedToken>)> {
+    fn train(&self, model: &mut ModelWrapper) -> Result<Vec<AddedToken>> {
         match self {
-            TrainerWrapper::BpeTrainer(bpe) => bpe.train(words).map(|(m, t)| (m.into(), t)),
-            TrainerWrapper::WordPieceTrainer(wpt) => wpt.train(words).map(|(m, t)| (m.into(), t)),
-            TrainerWrapper::UnigramTrainer(wpt) => wpt.train(words).map(|(m, t)| (m.into(), t)),
+            TrainerWrapper::BpeTrainer(t) => match model {
+                ModelWrapper::BPE(bpe) => t.train(bpe),
+                _ => Err("BpeTrainer can only train a BPE".into()),
+            },
+            TrainerWrapper::WordPieceTrainer(t) => match model {
+                ModelWrapper::WordPiece(wp) => t.train(wp),
+                _ => Err("WordPieceTrainer can only train a WordPiece".into()),
+            },
+            TrainerWrapper::WordLevelTrainer(t) => match model {
+                ModelWrapper::WordLevel(wl) => t.train(wl),
+                _ => Err("WordLevelTrainer can only train a WordLevel".into()),
+            },
+            TrainerWrapper::UnigramTrainer(t) => match model {
+                ModelWrapper::Unigram(u) => t.train(u),
+                _ => Err("UnigramTrainer can only train a Unigram".into()),
+            },
         }
     }
 
-    fn process_tokens(&self, words: &mut HashMap<String, u32>, tokens: Vec<String>) {
+    fn feed<I, S, F>(&mut self, iterator: I, process: F) -> Result<()>
+    where
+        I: Iterator<Item = S> + Send,
+        S: AsRef<str> + Send,
+        F: Fn(&str) -> Result<Vec<String>> + Sync,
+    {
         match self {
-            TrainerWrapper::BpeTrainer(bpe) => bpe.process_tokens(words, tokens),
-            TrainerWrapper::WordPieceTrainer(wpt) => wpt.process_tokens(words, tokens),
-            TrainerWrapper::UnigramTrainer(wpt) => wpt.process_tokens(words, tokens),
+            TrainerWrapper::BpeTrainer(bpe) => bpe.feed(iterator, process),
+            TrainerWrapper::WordPieceTrainer(wpt) => wpt.feed(iterator, process),
+            TrainerWrapper::WordLevelTrainer(wpt) => wpt.feed(iterator, process),
+            TrainerWrapper::UnigramTrainer(wpt) => wpt.feed(iterator, process),
         }
     }
 }
@@ -189,3 +229,19 @@ impl_enum_from!(BpeTrainer, TrainerWrapper, BpeTrainer);
 impl_enum_from!(WordPieceTrainer, TrainerWrapper, WordPieceTrainer);
 #[cfg(not(feature = "bert"))]
 impl_enum_from!(UnigramTrainer, TrainerWrapper, UnigramTrainer);
+#[cfg(not(feature = "bert"))]
+impl_enum_from!(WordLevelTrainer, TrainerWrapper, WordLevelTrainer);
+
+#[cfg(all(test, not(feature = "bert")))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn trainer_wrapper_train_model_wrapper() {
+        let trainer = TrainerWrapper::BpeTrainer(BpeTrainer::default());
+        let mut model = ModelWrapper::Unigram(Unigram::default());
+
+        let result = trainer.train(&mut model);
+        assert!(result.is_err());
+    }
+}

@@ -202,10 +202,10 @@ impl AddedVocabulary {
     }
 
     /// Get the token matching the given id if it exists
-    pub fn id_to_token<'s>(&'s self, id: u32, model: &'s impl Model) -> Option<&'s str> {
+    pub fn id_to_token(&self, id: u32, model: &impl Model) -> Option<String> {
         self.added_tokens_map_r
             .get(&id)
-            .map(|t| t.content.as_ref())
+            .map(|t| t.content.clone())
             .or_else(|| model.id_to_token(id))
     }
 
@@ -497,9 +497,9 @@ impl Serialize for AddedVocabulary {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::normalizers::utils::Lowercase;
-    use crate::normalizers::NormalizerWrapper;
-    use crate::{OffsetReferential, OffsetType, Result, Token};
+    #[cfg(not(feature = "bert"))]
+    use crate::{normalizers::utils::Lowercase, Trainer};
+    use crate::{normalizers::NormalizerWrapper, OffsetReferential, OffsetType, Result, Token};
     use std::path::{Path, PathBuf};
 
     #[derive(Serialize, Deserialize)]
@@ -526,24 +526,52 @@ mod tests {
         }
     }
 
+    #[cfg(not(feature = "bert"))]
+    struct TrainerMock;
+    #[cfg(not(feature = "bert"))]
+    impl Trainer for TrainerMock {
+        type Model = ModelMock;
+        fn should_show_progress(&self) -> bool {
+            true
+        }
+        fn train(&self, _model: &mut ModelMock) -> Result<Vec<AddedToken>> {
+            unimplemented!()
+        }
+        fn feed<I, S, F>(&mut self, _iterator: I, _process: F) -> Result<()>
+        where
+            I: Iterator<Item = S> + Send,
+            S: AsRef<str> + Send,
+            F: Fn(&str) -> Result<Vec<String>> + Sync,
+        {
+            unimplemented!()
+        }
+    }
+
     impl Model for ModelMock {
+        #[cfg(not(feature = "bert"))]
+        type Trainer = TrainerMock;
+
         fn tokenize(&self, _sequence: &str) -> Result<Vec<Token>> {
             unimplemented!()
         }
         fn token_to_id(&self, token: &str) -> Option<u32> {
             self.vocab.get(token).copied()
         }
-        fn id_to_token(&self, id: u32) -> Option<&str> {
-            self.vocab_r.get(&id).map(String::as_ref)
+        fn id_to_token(&self, id: u32) -> Option<String> {
+            self.vocab_r.get(&id).cloned()
         }
-        fn get_vocab(&self) -> &HashMap<String, u32> {
-            &self.vocab
+        fn get_vocab(&self) -> HashMap<String, u32> {
+            self.vocab.clone()
         }
         fn get_vocab_size(&self) -> usize {
             self.vocab.len()
         }
         fn save(&self, _folder: &Path, _name: Option<&str>) -> Result<Vec<PathBuf>> {
             unimplemented!()
+        }
+        #[cfg(not(feature = "bert"))]
+        fn get_trainer(&self) -> Self::Trainer {
+            TrainerMock
         }
     }
 
@@ -672,6 +700,7 @@ mod tests {
         );
     }
 
+    #[cfg(not(feature = "bert"))]
     #[test]
     fn options_use_cases() {
         // Is able to extract both normal and special tokens, with various options (lstrip, rstrip,
