@@ -12,6 +12,8 @@ pub mod punctuation;
 #[cfg(not(feature = "bert"))]
 pub mod sequence;
 #[cfg(not(feature = "bert"))]
+pub mod split;
+#[cfg(not(feature = "bert"))]
 pub mod unicode_scripts;
 #[cfg(not(feature = "bert"))]
 pub mod whitespace;
@@ -26,6 +28,7 @@ use crate::pre_tokenizers::{
     metaspace::Metaspace,
     punctuation::Punctuation,
     sequence::Sequence,
+    split::Split,
     unicode_scripts::UnicodeScripts,
     whitespace::{Whitespace, WhitespaceSplit},
 };
@@ -45,6 +48,8 @@ pub enum PreTokenizerWrapper {
     Whitespace(Whitespace),
     #[cfg(not(feature = "bert"))]
     Sequence(Sequence),
+    #[cfg(not(feature = "bert"))]
+    Split(Split),
     #[cfg(not(feature = "bert"))]
     Punctuation(Punctuation),
     #[cfg(not(feature = "bert"))]
@@ -72,6 +77,8 @@ impl PreTokenizer for PreTokenizerWrapper {
             #[cfg(not(feature = "bert"))]
             PreTokenizerWrapper::Sequence(tok) => tok.pre_tokenize(normalized),
             #[cfg(not(feature = "bert"))]
+            PreTokenizerWrapper::Split(tok) => tok.pre_tokenize(normalized),
+            #[cfg(not(feature = "bert"))]
             PreTokenizerWrapper::WhitespaceSplit(wspt) => wspt.pre_tokenize(normalized),
             #[cfg(not(feature = "bert"))]
             PreTokenizerWrapper::Digits(wspt) => wspt.pre_tokenize(normalized),
@@ -92,6 +99,8 @@ impl_enum_from!(Whitespace, PreTokenizerWrapper, Whitespace);
 impl_enum_from!(Punctuation, PreTokenizerWrapper, Punctuation);
 #[cfg(not(feature = "bert"))]
 impl_enum_from!(Sequence, PreTokenizerWrapper, Sequence);
+#[cfg(not(feature = "bert"))]
+impl_enum_from!(Split, PreTokenizerWrapper, Split);
 #[cfg(not(feature = "bert"))]
 impl_enum_from!(Metaspace, PreTokenizerWrapper, Metaspace);
 #[cfg(not(feature = "bert"))]

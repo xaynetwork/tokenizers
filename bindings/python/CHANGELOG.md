@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1]
+
+### Fixed
+- [#616]: Fix SentencePiece tokenizers conversion
+- [#617]: Fix offsets produced by Precompiled Normalizer (used by tokenizers converted from SPM)
+- [#618]: Fix Normalizer.normalize with `PyNormalizedStringRefMut`
+- [#620]: Fix serialization/deserialization for overlapping models
+- [#621]: Fix `ByteLevel` instantiation from a previously saved state (using `__getstate__()`)
+
+## [0.10.0]
+
+### Added
+- [#508]: Add a Visualizer for notebooks to help understand how the tokenizers work
+- [#519]: Add a `WordLevelTrainer` used to train a `WordLevel` model
+- [#533]: Add support for conda builds
+- [#542]: Add Split pre-tokenizer to easily split using a pattern
+- [#544]: Ability to train from memory. This also improves the integration with `datasets`
+- [#590]: Add getters/setters for components on BaseTokenizer
+- [#574]: Add `fust_unk` option to SentencePieceBPETokenizer
+
+### Changed
+- [#509]: Automatically stubbing the `.pyi` files
+- [#519]: Each `Model` can return its associated `Trainer` with `get_trainer()`
+- [#530]: The various attributes on each component can be get/set (ie.
+`tokenizer.model.dropout = 0.1`)
+- [#538]: The API Reference has been improved and is now up-to-date.
+
+### Fixed
+- [#519]: During training, the `Model` is now trained in-place. This fixes several bugs that were
+forcing to reload the `Model` after a training.
+- [#539]: Fix `BaseTokenizer` enable_truncation docstring
+
+## [0.9.4]
+
+### Fixed
+- [#492]: Fix `from_file` on `BertWordPieceTokenizer`
+- [#498]: Fix the link to download `sentencepiece_model_pb2.py`
+- [#500]: Fix a typo in the docs quicktour
+
+### Changed
+- [#506]: Improve Encoding mappings for pairs of sequence
+
 ## [0.9.3]
 
 ### Fixed
@@ -259,6 +301,27 @@ delimiter (Works like `.split(delimiter)`)
 - Fix a bug with the IDs associated with added tokens.
 - Fix a bug that was causing crashes in Python 3.5
 
+
+[#621]: https://github.com/huggingface/tokenizers/pull/621
+[#620]: https://github.com/huggingface/tokenizers/pull/620
+[#618]: https://github.com/huggingface/tokenizers/pull/618
+[#617]: https://github.com/huggingface/tokenizers/pull/617
+[#616]: https://github.com/huggingface/tokenizers/pull/616
+[#590]: https://github.com/huggingface/tokenizers/pull/590
+[#574]: https://github.com/huggingface/tokenizers/pull/574
+[#544]: https://github.com/huggingface/tokenizers/pull/544
+[#542]: https://github.com/huggingface/tokenizers/pull/542
+[#539]: https://github.com/huggingface/tokenizers/pull/539
+[#538]: https://github.com/huggingface/tokenizers/pull/538
+[#533]: https://github.com/huggingface/tokenizers/pull/533
+[#530]: https://github.com/huggingface/tokenizers/pull/530
+[#519]: https://github.com/huggingface/tokenizers/pull/519
+[#509]: https://github.com/huggingface/tokenizers/pull/509
+[#508]: https://github.com/huggingface/tokenizers/pull/508
+[#506]: https://github.com/huggingface/tokenizers/pull/506
+[#500]: https://github.com/huggingface/tokenizers/pull/500
+[#498]: https://github.com/huggingface/tokenizers/pull/498
+[#492]: https://github.com/huggingface/tokenizers/pull/492
 [#481]: https://github.com/huggingface/tokenizers/pull/481
 [#480]: https://github.com/huggingface/tokenizers/pull/480
 [#477]: https://github.com/huggingface/tokenizers/pull/477

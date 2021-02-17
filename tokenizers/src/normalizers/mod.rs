@@ -7,24 +7,22 @@ pub mod replace;
 pub mod strip;
 #[cfg(not(feature = "bert"))]
 pub mod unicode;
+#[cfg(not(feature = "bert"))]
 pub mod utils;
 
+pub use crate::normalizers::bert::BertNormalizer;
 #[cfg(not(feature = "bert"))]
 pub use crate::normalizers::{
     precompiled::Precompiled,
     replace::Replace,
     strip::{Strip, StripAccents},
     unicode::{Nmt, NFC, NFD, NFKC, NFKD},
-};
-pub use crate::{
-    normalizers::{
-        bert::BertNormalizer,
-        utils::{Lowercase, Sequence},
-    },
-    NormalizedString, Normalizer,
+    utils::{Lowercase, Sequence},
 };
 
 use serde::{Deserialize, Serialize};
+
+use crate::{NormalizedString, Normalizer};
 
 /// Wrapper for known Normalizers.
 #[derive(Clone, Debug, Deserialize, Serialize)]

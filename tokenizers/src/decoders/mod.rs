@@ -4,14 +4,14 @@ pub mod wordpiece;
 
 // Re-export these as decoders
 #[cfg(not(feature = "bert"))]
-pub use super::{pre_tokenizers::byte_level, pre_tokenizers::metaspace};
+pub use super::pre_tokenizers::{byte_level, metaspace};
 
 use serde::{Deserialize, Serialize};
 
 #[cfg(not(feature = "bert"))]
 use crate::{
-    decoders::bpe::BPEDecoder, pre_tokenizers::byte_level::ByteLevel,
-    pre_tokenizers::metaspace::Metaspace,
+    decoders::bpe::BPEDecoder,
+    pre_tokenizers::{byte_level::ByteLevel, metaspace::Metaspace},
 };
 use crate::{decoders::wordpiece::WordPiece, Decoder, Result};
 

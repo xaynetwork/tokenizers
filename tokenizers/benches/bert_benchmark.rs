@@ -3,9 +3,11 @@ extern crate criterion;
 
 mod common;
 
-use std::fs::File;
-use std::io::{BufRead, BufReader};
-use std::path::Path;
+use std::{
+    fs::File,
+    io::{BufRead, BufReader},
+    path::Path,
+};
 
 use criterion::Criterion;
 use tokenizers::{
@@ -76,7 +78,7 @@ pub fn bench_bert(c: &mut Criterion) {
 
 #[cfg(not(feature = "bert"))]
 fn bench_train(c: &mut Criterion) {
-    let trainer = WordPieceTrainerBuilder::default()
+    let mut trainer = WordPieceTrainerBuilder::default()
         .show_progress(false)
         .build();
     type Tok = TokenizerImpl<
@@ -93,7 +95,7 @@ fn bench_train(c: &mut Criterion) {
             iter_bench_train(
                 iters,
                 &mut tokenizer,
-                &trainer,
+                &mut trainer,
                 vec!["data/small.txt".to_string()],
             )
         })
@@ -106,7 +108,7 @@ fn bench_train(c: &mut Criterion) {
             iter_bench_train(
                 iters,
                 &mut tokenizer,
-                &trainer,
+                &mut trainer,
                 vec!["data/big.txt".to_string()],
             )
         })

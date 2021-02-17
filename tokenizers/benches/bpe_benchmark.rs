@@ -1,5 +1,3 @@
-#![cfg(not(feature = "bert"))]
-
 #[macro_use]
 extern crate criterion;
 
@@ -71,7 +69,7 @@ fn bench_gpt2(c: &mut Criterion) {
 }
 
 fn bench_train(c: &mut Criterion) {
-    let trainer: TrainerWrapper = BpeTrainerBuilder::default()
+    let mut trainer: TrainerWrapper = BpeTrainerBuilder::default()
         .show_progress(false)
         .build()
         .into();
@@ -82,7 +80,7 @@ fn bench_train(c: &mut Criterion) {
             iter_bench_train(
                 iters,
                 &mut tokenizer,
-                &trainer,
+                &mut trainer,
                 vec!["data/small.txt".to_string()],
             )
         })
@@ -95,7 +93,7 @@ fn bench_train(c: &mut Criterion) {
             iter_bench_train(
                 iters,
                 &mut tokenizer,
-                &trainer,
+                &mut trainer,
                 vec!["data/big.txt".to_string()],
             )
         })

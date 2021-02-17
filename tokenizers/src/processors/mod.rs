@@ -79,26 +79,27 @@ impl_enum_from!(TemplateProcessing, PostProcessorWrapper, Template);
 
 #[cfg(test)]
 mod tests {
-    #[cfg(not(feature = "bert"))]
     use super::*;
 
-    #[cfg(not(feature = "bert"))]
     #[test]
     fn deserialize_bert_roberta_correctly() {
-        let roberta = RobertaProcessing::default();
-        let roberta_r = r#"{
-            "type":"RobertaProcessing",
-            "sep":["</s>",2],
-            "cls":["<s>",0],
-            "trim_offsets":true,
-            "add_prefix_space":true
-        }"#
-        .replace(char::is_whitespace, "");
-        assert_eq!(serde_json::to_string(&roberta).unwrap(), roberta_r);
-        assert_eq!(
-            serde_json::from_str::<PostProcessorWrapper>(&roberta_r).unwrap(),
-            PostProcessorWrapper::Roberta(roberta)
-        );
+        #[cfg(not(feature = "bert"))]
+        {
+            let roberta = RobertaProcessing::default();
+            let roberta_r = r#"{
+                "type":"RobertaProcessing",
+                "sep":["</s>",2],
+                "cls":["<s>",0],
+                "trim_offsets":true,
+                "add_prefix_space":true
+            }"#
+            .replace(char::is_whitespace, "");
+            assert_eq!(serde_json::to_string(&roberta).unwrap(), roberta_r);
+            assert_eq!(
+                serde_json::from_str::<PostProcessorWrapper>(&roberta_r).unwrap(),
+                PostProcessorWrapper::Roberta(roberta)
+            );
+        }
 
         let bert = BertProcessing::default();
         let bert_r = r#"{"type":"BertProcessing","sep":["[SEP]",102],"cls":["[CLS]",101]}"#;

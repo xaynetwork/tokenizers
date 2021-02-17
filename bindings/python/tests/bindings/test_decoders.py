@@ -1,5 +1,6 @@
 import pytest
 import pickle
+import json
 
 from tokenizers.decoders import Decoder, ByteLevel, WordPiece, Metaspace, BPEDecoder
 
@@ -14,6 +15,12 @@ class TestByteLevel:
     def test_decoding(self):
         decoder = ByteLevel()
         assert decoder.decode(["My", "Ġname", "Ġis", "ĠJohn"]) == "My name is John"
+
+    def test_manual_reload(self):
+        byte_level = ByteLevel()
+        state = json.loads(byte_level.__getstate__())
+        reloaded = ByteLevel(**state)
+        assert isinstance(reloaded, ByteLevel)
 
 
 class TestWordPiece:
@@ -33,12 +40,24 @@ class TestWordPiece:
         assert decoder.decode(["My", "na", "__me", "is", "Jo", "__hn"]) == "My name is John"
         assert decoder.decode(["I", "'m", "Jo", "__hn"]) == "I 'm John"
 
+    def test_can_modify(self):
+        decoder = WordPiece(prefix="$$", cleanup=False)
+
+        assert decoder.prefix == "$$"
+        assert decoder.cleanup == False
+
+        # Modify these
+        decoder.prefix = "__"
+        assert decoder.prefix == "__"
+        decoder.cleanup = True
+        assert decoder.cleanup == True
+
 
 class TestMetaspace:
     def test_instantiate(self):
         assert Metaspace() is not None
         assert Metaspace(replacement="-") is not None
-        with pytest.raises(Exception, match="replacement must be a character"):
+        with pytest.raises(ValueError, match="expected a string of length 1"):
             Metaspace(replacement="")
         assert Metaspace(add_prefix_space=True) is not None
         assert isinstance(Metaspace(), Decoder)
@@ -50,6 +69,18 @@ class TestMetaspace:
         assert decoder.decode(["▁My", "▁name", "▁is", "▁John"]) == "My name is John"
         decoder = Metaspace(replacement="-", add_prefix_space=False)
         assert decoder.decode(["-My", "-name", "-is", "-John"]) == " My name is John"
+
+    def test_can_modify(self):
+        decoder = Metaspace(replacement="*", add_prefix_space=False)
+
+        assert decoder.replacement == "*"
+        assert decoder.add_prefix_space == False
+
+        # Modify these
+        decoder.replacement = "&"
+        assert decoder.replacement == "&"
+        decoder.add_prefix_space = True
+        assert decoder.add_prefix_space == True
 
 
 class TestBPEDecoder:
@@ -68,3 +99,12 @@ class TestBPEDecoder:
         )
         decoder = BPEDecoder(suffix="_")
         assert decoder.decode(["My_", "na", "me_", "is_", "Jo", "hn_"]) == "My name is John"
+
+    def test_can_modify(self):
+        decoder = BPEDecoder(suffix="123")
+
+        assert decoder.suffix == "123"
+
+        # Modify these
+        decoder.suffix = "</w>"
+        assert decoder.suffix == "</w>"
